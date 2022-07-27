@@ -1,0 +1,131 @@
+import numpy as np
+import os
+
+class geometry:
+    def __init__(self,path) -> None:
+        self.path = path.replace('\\','/')
+    def set_header_default(self):
+        ## header arguments
+        # number of voxels
+        self.Nx = 100
+        self.Ny = 100
+        self.Nz = 700
+        # voxel size (cm)
+        self.dx = 0.1
+        self.dy = 0.1   
+        self.dz = 0.1
+        # first voxel index
+        self.first_idx = [0,0,0]
+        self.center = [2.50,2.50,0]# unit(cm)
+        # first voxel center position (cm)
+        self.x0 = (self.first_idx[0] - (self.Nx-1))*self.dx/2 + self.center[0]
+        self.y0 = (self.first_idx[1] - (self.Ny-1))*self.dy/2 + self.center[1]
+        self.z0 = (self.first_idx[2] - (self.Nz-1))*self.dz/2 + self.center[2]
+
+        self.data_type = 'short' # short or int
+        self.byte_order = 0#fixed
+        # not used
+        self.translation = [0,0,0]
+        self.rotation = [0,0,0]
+        self.referenceImageIsocenter = [0,0,0]
+        self.reverseX = 0
+        self.reverseY = 0
+        self.reverseZ = 0
+        self.ImageOrientationPatient = [1,0,0,0,1,0,0,0,1]
+    def set_cfg_default(self):
+        ## cfg arguments
+        self.min_energy = 1.0
+        self.energy = 210.0
+        self.spot_size = [0.6,0.6]# beam spot size (cm), spare beam shape
+        self.num_particle = 1e6# integer, num of particles
+        self.src_center = [-0,-0,self.z0-1]# beam source center position(cm)
+        # rotation mode: 
+        # Rz()*Ry()*Rx()*init_vec
+        # beam initial direction vector
+        self.beam_init_vec = np.array([[0,0,1]]).T# show be column vector
+        self.rot_x = 0# rotation around x-axis: angle(degree)
+        self.rot_y = 0# rotation around y-axis: angle(degree)
+        self.rot_z = 0# rotation around z-axis: angle(degree)
+
+        #cfg_file = self.create_cfg_file(cfg_filename,self.path)
+    def Rx(self,degree):
+        x = np.pi*degree/180.
+        # rotation matrix
+        r = np.array([[1   ,        0,        0],
+                    [  0   ,np.cos(x),-np.sin(x)],
+                    [  0   ,np.sin(x), np.cos(x)]])
+        return r
+    def Ry(self,degree):
+        x = np.pi*degree/180.
+        # rotation matrix
+        r = np.array([[np.cos(x),  0, np.sin(x)],
+                    [  0        ,  1,        0],
+                    [ -np.sin(x),  0, np.cos(x)]])
+        return r
+    def Rz(self,degree):
+        x = np.pi*degree/180.
+        # rotation matrix
+        r = np.array([[np.cos(x),-np.sin(x),     0],
+                    [  np.sin(x), np.cos(x),     0],
+                    [  0        ,         0,     1]])
+        return r
+    def create_cfg_file(self,cfg_filename):
+        
+        physics_path = self.path + "/input/"
+        cfg_file = self.path+'/Phantom/'+cfg_filename
+        file = open(cfg_file, "w+") 
+        # header = open(self.path+'geo_phantom.header', "w+") 
+        macro_cross_section_file = 'mcpro_G4.imfp'
+        assert os.path.exists(physics_path+macro_cross_section_file),(physics_path+macro_cross_section_file+' not exist!')
+        mass_stopping_power_ratio_file = 'mcpro.mater'
+        assert os.path.exists(physics_path+mass_stopping_power_ratio_file),(physics_path+mass_stopping_power_ratio_file+' not exist!')
+        restricted_stopping_power_in_water_file = 'mcpro3.rstpw'
+        assert os.path.exists(physics_path+restricted_stopping_power_in_water_file),(physics_path+restricted_stopping_power_in_water_file+' not exist!')
+        density_correction_factor_file = 'densityCorrection.dat'
+        assert os.path.exists(physics_path+density_correction_factor_file), (physics_path+density_correction_factor_file+' not exist!')
+        # setup physic and LUT
+        file.write('physics.macro_cross_section.file=%s%s\n'% (physics_path,macro_cross_section_file))
+        file.write('physics.mass_stopping_power_ratio.file=%s%s\n' % (physics_path,mass_stopping_power_ratio_file))
+        file.write('physics.restricted_stopping_power_in_water.file=%s%s\n' % (physics_path,restricted_stopping_power_in_water_file))
+        file.write('physics.density_correction_factor.file=%s%s\n' % (physics_path,density_correction_factor_file))
+        #
+        min_simulation_energy=self.min_energy# 1.0 MeV
+        assert self.min_energy <= self.energy,'self.energy < self.min_energy!'
+        file.write('self.min_simulation_energy=%f\n' % min_simulation_energy)
+
+        # load geometry setting
+        #geo_phantom is geometry file name, .header is file extension
+        geometry_path = self.path+'/Phantom/geo_phantom'# water_phan_HU_40cm  geo_phantom
+        assert os.path.exists(geometry_path+'.header'),(geometry_path+'.header'+' not exist!')
+        file.write('in.ct.file=%s\n' % geometry_path)
+
+        # proton beam setting
+        spot_size = self.spot_size# [0, 0] [x,y] size unit(cm), square beam shape
+        file.write('self.spot_size=%f\t%f\n' % (spot_size[0],spot_size[1]))
+        energy = self.energy# 110.0 proton energy MeV
+        file.write('self.source.energy=%f\n' % energy)
+        num_of_particles = self.num_particle
+        file.write('self.number_simulation_particles=%d\n' % num_of_particles)
+        src_center = self.src_center# [0,0,-20][x,y,z] unit(cm)
+        file.write('self.source.center=%f\t%f\t%f\n' % (src_center[0],src_center[1],src_center[2]))
+
+        # normalized direction vector(degree)
+        beam_direction_vec = self.Rz(self.rot_z)@(self.Ry(self.rot_y)@(self.Rx(self.rot_x)@self.beam_init_vec))
+
+        file.write('self.source.direction=%f\t%f\t%f\n' % (beam_direction_vec[0],beam_direction_vec[1],beam_direction_vec[2]))
+        # add opencl file path
+        file.write('cl.directory=%s\n' % (self.path+'/cl_files/'))
+        # output directory, not used
+        file.write('output.directory=./output/\n')
+        file.close()
+    def create_header_file(self,cfg_filename):
+        physics_path = self.path + "/input/"
+        cfg_file = self.path+'/Phantom/'+cfg_filename
+        file = open(cfg_file, "w+") 
+
+
+if __name__ == '__main__':
+    geo = geometry(r'C:/Users/Public/Data/gopmc_python')
+    geo.set_header_default()
+    geo.set_cfg_default()
+    geo.create_cfg_file('pencilbeam.cfg')
