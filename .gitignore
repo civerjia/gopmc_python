@@ -1,3 +1,5 @@
 # ignoore matlab temp files
 *.mat
 *.asv
+# ignore image
+*.img
