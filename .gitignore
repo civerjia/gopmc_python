@@ -3,3 +3,5 @@
 *.asv
 # ignore image
 *.img
+# ignore python temp files
+*.pyc

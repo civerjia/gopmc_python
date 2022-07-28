@@ -1,4 +1,5 @@
 import appgopmc_dose
+import mc_setting as mc
 import numpy as np
 import os 
 from scipy.io import savemat
@@ -11,7 +12,14 @@ current_file_path = os.path.dirname(os.path.abspath(__file__))
 if cwd != current_file_path:
     os.chdir(current_file_path)
 
+
+
 pencilbeam_cfg_path = 'C:/Users/Public/Data/gopmcdose_v4a_py/goPMC_dose/pencilbeam.cfg'
+geo = mc.geometry(current_file_path)
+geo.set_header_default()
+geo.set_cfg_default()
+geo.create_cfg_file('pencilbeam.cfg')
+geo.create_header_file()
 
 image = np.zeros((100*100*1600,1),dtype=np.short)
 dose = pmc.run(pencilbeam_cfg_path,image)

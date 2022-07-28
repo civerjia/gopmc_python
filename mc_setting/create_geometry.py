@@ -118,14 +118,64 @@ class geometry:
         # output directory, not used
         file.write('output.directory=./output/\n')
         file.close()
-    def create_header_file(self,cfg_filename):
-        physics_path = self.path + "/input/"
-        cfg_file = self.path+'/Phantom/'+cfg_filename
+    def create_header_file(self):
+        cfg_file = self.path+'/Phantom/'+'geo_phantom.header'
         file = open(cfg_file, "w+") 
+
+        file.write('imageType =\n')#not used
+        file.write('data_type = %s\n' % self.data_type)#fixed data type, short or int
+        file.write('byte_order = %d\n' % self.byte_order)
+        file.write('bytes_pix = 2\n')
+
+        file.write('vol_min = 0\n')
+        file.write('vol_max = 4096\n')
+
+        file.write('x_dim = %d\n' % self.Nx)
+        file.write('y_dim = %d\n' % self.Ny)
+        file.write('z_dim = %d\n' % self.Nz)
+
+        file.write('x_pixdim = %d\n' % self.dx)
+        file.write('y_pixdim = %d\n' % self.dy)
+        file.write('z_pixdim = %d\n' % self.dz)
+
+        # first voxel position
+        file.write('x_start = %d\n' % self.x0)
+        file.write('y_start = %d\n' % self.y0)
+        file.write('z_start = %d\n' % self.z0)
+
+        file.write('date =\n')
+        file.write('time =\n')
+        file.write('db_name =\n')
+        file.write('uid =\n')
+        file.write('referenceUID =\n')
+        file.write('originalUID =\n')
+
+        file.write('patientPosition =\n')
+        file.write('FrameOfReferenceUID =\n')
+
+        file.write('translation = [%d\t%d\t%d]\n' % (self.translation[0],self.translation[1],self.translation[2]))
+        file.write('rotation = [%d\t%d\t%d]\n' % (self.rotation[0],self.rotation[1],self.rotation[2]))
+        file.write('referenceImageIsocenter = [%d\t%d\t%d]\n' % (self.referenceImageIsocenter[0],self.referenceImageIsocenter[1],self.referenceImageIsocenter[2]))
+
+        file.write('reverseX = %d\n' % self.reverseX)
+        file.write('reverseY = %d\n' % self.reverseY)
+        file.write('reverseZ = %d\n' % self.reverseZ)
+
+        file.write('ImageOrientationPatient = [%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d]\n' % (
+            self.ImageOrientationPatient[0],self.ImageOrientationPatient[1],self.ImageOrientationPatient[2],
+            self.ImageOrientationPatient[3],self.ImageOrientationPatient[4],self.ImageOrientationPatient[5],
+            self.ImageOrientationPatient[6],self.ImageOrientationPatient[7],self.ImageOrientationPatient[8]))
+
+        file.write('LinearMeasureUnit = cm\n')
+        file.write('TransformMatrix =\n')
+
+        file.close()
 
 
 if __name__ == '__main__':
     geo = geometry(r'C:/Users/Public/Data/gopmc_python')
+    # geo = geometry(r'/Users/shuangzhou/projects/gopmc_python')
     geo.set_header_default()
     geo.set_cfg_default()
     geo.create_cfg_file('pencilbeam.cfg')
+    geo.create_header_file()
