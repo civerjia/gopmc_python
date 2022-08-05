@@ -5,3 +5,10 @@
 *.img
 # ignore python temp files
 *.pyc
+# ignore output
+output/
+# ignore vs code json files
+*.json
+# ignore img files
+*.img
+*.npz
