@@ -43,11 +43,25 @@ mc_setting.write_image(image,path)
 Phantom.cl, ParticleStatus.cl, Macro.h, randomKernel.h
 # they will be read by Monte Carlo engine should not change, don't move to other folder
 
-
-# minimum example:
-# run_mc.py with Water function
 ```
-
 matlab_func : only `rw_img.m` is used for IMPT, others files are for MLSIC
 
+minimum example:
+- run_mc.py with Water function
+
+How to load CT images:
+- read dicom files with read_dicom.py, costumize your own path and filename
+- convert dicom files to a single 3d numpy array
+- create a scene with the CT file
+- build your geometry
+- run
+
+```python
+image = np.array(image,dtype=np.short).transpose(2, 1, 0).flatten()
+mc.write_image(image,current_file_path + '\\Phantom\\')
+start = time.time()
+dose = pmc.run(geo.cfg_file,image)
+print("Total time = ",time.time() - start)
+totalDose = np.array(dose).reshape((geo.Nz,geo.Nx,geo.Ny)).transpose(2, 1, 0)
+```
 
