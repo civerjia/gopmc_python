@@ -5,8 +5,10 @@
 *.img
 # ignore python temp files
 *.pyc
-# ignore output
-output/
+# exclude output
+output/*
+# but keep this
+!output/.gitkeep 
 # ignore vs code json files
 *.json
 # ignore img files
