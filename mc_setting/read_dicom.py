@@ -13,6 +13,21 @@ def show_head_phantom_slice(path,name,idx):
     print('RescaleSlope = ',ds.RescaleSlope)
     print('RescaleIntercept = ',ds.RescaleIntercept)
 def read_3d_head_phantom(path,name,idx):
+    """read dicom files in local path,
+     convert it into 3d numpy array,
+     saved in ./Phantom/*.npy file
+
+    Args:
+        path (string): path to dicom folder
+        name (string): ct dicom file name without index and file extension, i.e. 'CT.1.3.12.2.1107.5.1.7.130094.30000022051213533424400000214.dcm'
+        ='CT.1.3.12.2.1107.5.1.7.130094.30000022051213533424400000' + str(214) + '.dcm'
+
+        idx (int): index in dicom file
+
+    Returns:
+        head: 3d numpy array of CT image
+        dxyz: numpy array of voxel size[dx,dy,dz] unit in mm
+    """
     head = np.zeros((512,512,len(idx)))
     for i in idx:
         filename = name+str(i)+'.dcm'

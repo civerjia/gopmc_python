@@ -1,4 +1,4 @@
-import appgopmc_dose
+import appgopmc_dose as gopmc
 import mc_setting as mc
 import numpy as np
 import os 
@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import napari
 import time
 
-pmc = appgopmc_dose.appgopmc_dose()
+pmc = gopmc.appgopmc_dose()
 
 def change_dir():
     cwd = os.getcwd()
@@ -33,6 +33,7 @@ def Water(E):
     
     geo.create_cfg_file('pencilbeam.cfg')
     geo.create_header_file()
+    # .transpose(2, 1, 0) is required for matlab
     image = np.array(np.zeros((geo.Nx,geo.Ny,geo.Nz)),dtype=np.short).transpose(2, 1, 0).flatten()
     mc.write_image(image,current_file_path + '\\Phantom\\')
     start = time.time()
@@ -93,7 +94,7 @@ def call_exe():
     print("Total time = ",time.time() - start)
 if __name__ == '__main__':
     # MLSIC()
-    for e in range(25,181):
-        Water(e)
-
+    # for e in range(25,181):
+    #     Water(e)
+    Water(110)
     # call_exe()

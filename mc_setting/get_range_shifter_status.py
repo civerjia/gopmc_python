@@ -1,5 +1,14 @@
 import numpy as np
 def get_RangeShifterStatus(Ein):
+    """Mevion S250i range shifter setting, input energy will be replaced by
+    a deliverable energy
+
+    Args:
+        Ein (float): proton energy(MeV)
+
+    Returns:
+        bool array: on/off of each range shifter slab
+    """
     Energies = np.array([25.840,29.930,33.470,36.900,40.060,
             43.090,45.850,48.600,51.200,53.740,
             56.090,58.460,60.740,62.980,65.080,

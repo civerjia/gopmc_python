@@ -6,6 +6,11 @@ except:
     from .create_sence import scene
 class geometry:
     def __init__(self,path) -> None:
+        """instantiation
+
+        Args:
+            path (string): i.e. C:\\Users\\Public\\Data\\gopmc_python
+        """
         self.path = path.replace('\\','/')
 
         ## fixed values
@@ -20,6 +25,17 @@ class geometry:
         self.reverseZ = 0
         self.ImageOrientationPatient = [1,0,0,0,1,0,0,0,1]
     def set_header(self, Nx = 51,Ny = 51,Nz = 120,dx = 0.1,dy = 0.1,dz = 0.1,center = [0,0,0]):
+        """set geo_phantom.header parameters with user input
+
+        Args:
+            Nx (int, optional): Number of voxel x. Defaults to 51.
+            Ny (int, optional): Number of voxel y. Defaults to 51.
+            Nz (int, optional): Number of voxel z. Defaults to 120.
+            dx (float, optional): x voxel size(cm). Defaults to 0.1.
+            dy (float, optional): y voxel size(cm). Defaults to 0.1.
+            dz (float, optional): z voxel size(cm). Defaults to 0.1.
+            center (list, optional): center of whole image volume(cm). Defaults to [0,0,0].
+        """
         ## header arguments
         # number of voxels
         self.Nx = Nx
@@ -54,10 +70,20 @@ class geometry:
         self.y0 = (self.first_idx[1] - (self.Ny-1))*self.dy/2 + self.center[1]
         self.z0 = (self.first_idx[2] - (self.Nz-1))*self.dz/2 + self.center[2]
     def set_cfg(self,energy = 110.0,spot_size = [0,0],num_particle = 1e6,rx = 0,ry = 0,rz = 0):
+        """ set pencilbeam.cfg parameters with user input
+
+        Args:
+            energy (float, optional): proton beam energy(MeV). Defaults to 110.0.
+            spot_size (list, optional): [x size, y size] beam spot size (cm), sqare beam shape. Defaults to [0,0].
+            num_particle (int, optional): number of proton particles. Defaults to 1e6.
+            rx (int, optional): rotation around x-axis: angle(degree). Defaults to 0.
+            ry (int, optional): rotation around y-axis: angle(degree). Defaults to 0.
+            rz (int, optional): rotation around z-axis: angle(degree). Defaults to 0.
+        """
         ## cfg arguments
         self.min_energy = 1.0
         self.energy = energy
-        self.spot_size = spot_size# beam spot size (cm), spare beam shape
+        self.spot_size = spot_size# beam spot size (cm), sqare beam shape
         self.num_particle = num_particle# integer, num of particles
         self.src_center = [0,0,self.z0-1]# beam source center position(cm)
         # rotation mode: 
@@ -136,8 +162,12 @@ class geometry:
                     [  np.sin(x), np.cos(x),     0],
                     [  0        ,         0,     1]])
         return r
-    def create_cfg_file(self,cfg_filename):
-        
+    def create_cfg_file(self,cfg_filename = 'pencilbeam.cfg'):
+        """ create cfg_filename file and save it in ./Phantom/
+
+        Args:
+            cfg_filename (str, optional): file name. Defaults to 'pencilbeam.cfg'.
+        """
         physics_path = self.path + "/input/"
         cfg_file = self.path+'/Phantom/'+cfg_filename
         self.cfg_file = cfg_file
@@ -188,6 +218,8 @@ class geometry:
         file.write('output.directory=%s\n' % self.outputdir)
         file.close()
     def create_header_file(self):
+        """create geo_phantom.header file and save it in ./Phantom/
+        """
         header_file = self.path+'/Phantom/'+'geo_phantom.header'
         file = open(header_file, "w+") 
 
