@@ -1,13 +1,13 @@
-function [gauss_para_o,Dose_o] = fit3dDose_v3(x,Dose_i)
+function [gauss_para_o,Dose_o,loss] = fit3dDose_v3(x,Dose_i)
 
 if size(x,1) == 1
     x = x';
 end
 N_gaussian = 2;
-[Dose_o,gauss_para_o] = gauss3d_dose(Dose_i,x,x,N_gaussian);
+[Dose_o,gauss_para_o,loss] = gauss3d_dose(Dose_i,x,x,N_gaussian);
 end
 
-function [Dose_o,gauss_para_o] = gauss3d_dose(Dose3D,x,y,N_gaussian)
+function [Dose_o,gauss_para_o,loss] = gauss3d_dose(Dose3D,x,y,N_gaussian)
 xy = [x,y];
 idd = squeeze(sum(sum(Dose3D,1),2));
 Nz = size(Dose3D,3);
@@ -30,10 +30,11 @@ end
 valid = idd >= 4e-4*max(idd);
 idx = 1:length(idd);
 valid_idx = idx(valid);
+loss = zeros(Nz,1);
 for i = valid_idx
     profile2d = squeeze(Dose3D(:,:,i));
     if N_gaussian ==2
-        para = [1.7*idd(i),0,0,5, 1e-2,0,0,5];
+        para = [1.7*idd(i),0,0,2, 1e-2,0,0,2];
     else
         para = [1.7*idd(i),0,0,5];% A,mux,muy,sigma
     end
@@ -41,6 +42,7 @@ for i = valid_idx
         'FunctionTolerance',1e-10,'OptimalityTolerance',1e-10,'StepTolerance',1e-10);
     [para_o,resnorm] = lsqcurvefit(gauss3d,para,xy,profile2d,lb,ub,options);
     gauss_para_o(:,i) = para_o;
+    loss(i) = resnorm;
     
 end
 Dose_o = dose3d_mex(xy(:,1),xy(:,2),gauss_para_o,Nz,N_gaussian);

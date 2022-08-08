@@ -1,12 +1,14 @@
-
-
+Only support windows, GPU with cuda required.
+Python version should be 3.9
 
 
 
 minimum example:
-- conda activate base
-- pip install -r requirements.txt
-- python run_mc.py
+
+    conda activate base
+    pip install -r requirements.txt
+    python run_mc.py
+    
 - it will call Water(110), calculate 110MeV no size proton beam in water phantom. results save in ./output/totalDose.img, you can read it in matlab
     ```matlab
     fileID = fopen([path,'/output/totalDose.img'],'r');
@@ -29,7 +31,7 @@ minimum example:
     geo.set_cfg(energy,spot_size,num_particle)# see comments
     ```
 
-How to load CT images:
+How to load CT images, modify `modify_this.py`:
 - import lib
     ```python
     import appgopmc_dose as gopmc
