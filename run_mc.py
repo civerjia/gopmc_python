@@ -29,7 +29,7 @@ def Water(E):
     spot_size = [0,0]# beam spot size (cm), sqare beam shape
     num_particle = 1e6# integer, num of particles
     geo.set_header(Nx,Ny,Nz,dx,dy,dz)
-    geo.set_cfg(energy,spot_size,num_particle)
+    geo.set_cfg(energy,spot_size,num_particle,src_center = [5,0,geo.z0-1])
     
     geo.create_cfg_file('pencilbeam.cfg')
     geo.create_header_file()

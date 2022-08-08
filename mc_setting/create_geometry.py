@@ -69,7 +69,7 @@ class geometry:
         self.x0 = (self.first_idx[0] - (self.Nx-1))*self.dx/2 + self.center[0]
         self.y0 = (self.first_idx[1] - (self.Ny-1))*self.dy/2 + self.center[1]
         self.z0 = (self.first_idx[2] - (self.Nz-1))*self.dz/2 + self.center[2]
-    def set_cfg(self,energy = 110.0,spot_size = [0,0],num_particle = 1e6,rx = 0,ry = 0,rz = 0):
+    def set_cfg(self,energy = 110.0,spot_size = [0,0],num_particle = 1e6,rx = 0,ry = 0,rz = 0,src_center = [0,0,-40]):
         """ set pencilbeam.cfg parameters with user input
 
         Args:
@@ -79,13 +79,14 @@ class geometry:
             rx (int, optional): rotation around x-axis: angle(degree). Defaults to 0.
             ry (int, optional): rotation around y-axis: angle(degree). Defaults to 0.
             rz (int, optional): rotation around z-axis: angle(degree). Defaults to 0.
+            src_center (list, optional): beam source center position(cm) [x,y,z], beam direction is [0,0,1] by default
         """
         ## cfg arguments
         self.min_energy = 1.0
         self.energy = energy
         self.spot_size = spot_size# beam spot size (cm), sqare beam shape
         self.num_particle = num_particle# integer, num of particles
-        self.src_center = [0,0,self.z0-1]# beam source center position(cm)
+        self.src_center = src_center# beam source center position(cm)
         # rotation mode: 
         # Rz()*Ry()*Rx()*init_vec
         # beam initial direction vector
