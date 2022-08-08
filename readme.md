@@ -9,9 +9,9 @@ minimum example:
 - python run_mc.py
 - it will call Water(110), calculate 110MeV no size proton beam in water phantom. results save in ./output/totalDose.img, you can read it in matlab
     ```matlab
-        fileID = fopen([path,'/output/totalDose.img'],'r');
-        temp = fread(fileID,'float');
-        dose = reshape(temp,51,51,360);
+    fileID = fopen([path,'/output/totalDose.img'],'r');
+    temp = fread(fileID,'float');
+    dose = reshape(temp,51,51,360);
     ```
 - in water example, it may take 1min at low energy, but it becomes fast when the energy is high, 7 sec at 180MeV
 - Things you can modify in Water(E) function:
