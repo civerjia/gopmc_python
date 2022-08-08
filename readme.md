@@ -102,20 +102,20 @@ How to load CT images:
 - `appgopmc_dose.exe --config ./Phantom/pencilbeam.cfg`
 
 # matlab_func
-    - All files in it are not used for IMPT, they are used for MLSIC
-    - read .img files
-        ```matlab
-        fileID = fopen([path,'/output/totalDose.img'],'r');
-        temp = fread(fileID,'float');
-        dose = reshape(temp,51,51,360);
-        ```
-    - write .img files
-        ```matlab
-        scene = zeros(51,51,360);
-        fileID = fopen([path,'/Phantom/geo_phantom.img'],'w+');
-        fwrite(fileID,scene(:),'short');
-        fclose(fileID);
-        ```
+- All files in it are not used for IMPT, they are used for MLSIC
+- read .img files
+    ```matlab
+    fileID = fopen([path,'/output/totalDose.img'],'r');
+    temp = fread(fileID,'float');
+    dose = reshape(temp,51,51,360);
+    ```
+- write .img files
+    ```matlab
+    scene = zeros(51,51,360);
+    fileID = fopen([path,'/Phantom/geo_phantom.img'],'w+');
+    fwrite(fileID,scene(:),'short');
+    fclose(fileID);
+    ```
 # Important files 
 ``` python
 appgopmc_dose.cp39-win_amd64.pyd
