@@ -18,7 +18,7 @@
 % p = AMPD(x);
 % plot(t,x);
 % hold on
-% plot(p,x(p),'ro');
+% plot(t(p),x(p),'ro');
 function p = AMPD(x,pad,mode)
     if nargin == 2 
         mode = 'both';
