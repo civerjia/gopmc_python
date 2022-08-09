@@ -108,9 +108,11 @@ How to load CT images, modify `modify_this.py`:
 - read (*.img)data in matlab (see minimum example)
 
 # Don't want to run with python
-- get geometry and img files ready
+- get geometry and img files(**data type is short or int16**) ready
 - open cmd in current folder
 - `appgopmc_dose.exe --config ./Phantom/pencilbeam.cfg`
+- results saved in ./output/, totalDose.img and totalDose.header
+- read *.img file in matlab, **data type is float**
 
 # matlab_func
 - All files in it are not used for IMPT, they are used for MLSIC
