@@ -98,7 +98,7 @@ How to load CT images, modify `modify_this.py`:
     matData_filename = 'waterDose'+str(E)
     savemat(geo.outputdir+matData_filename+'.mat',{'totalDose':totalDose, 'dx':geo.dx, 'dy':geo.dy, 'dz':geo.dz})
     ```
-- load (*.mat)data in matlab
+- load (*.mat)data in matlab, view 3d data with VolumeViewer in Image processing and computer vision toolbox
     ```matlab
     load([matData_filename,'.mat']);
     % or load data in struct
