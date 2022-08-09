@@ -29,12 +29,12 @@ image = np.array(head,dtype=np.short).transpose(2, 1, 0).flatten()
 header_name = 'geo_phantom'
 mc.write_image(image,current_file_path + '\\Phantom\\',header_name+'.img')
 
-Nx = 51
-Ny = 51
-Nz = 360
-dx = 0.1#cm
-dy = 0.1
-dz = 0.1
+Nx = np.size(head,0)
+Ny = np.size(head,1)
+Nz = np.size(head,2)
+dx = dxyz[0]#cm
+dy = dxyz[1]
+dz = dxyz[2]
 E = 110.0
 energy = E # MeV
 spot_size = [0,0]# beam spot size (cm), sqare beam shape
