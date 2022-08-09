@@ -13,38 +13,23 @@ dy = 0.1;
 dz = 0.1;
 idds = zeros(Nz,length(E));
 cnt = 1;
+x = ((1:Nx) - (Nx+1)/2)*dx;
 Ne = length(E);
 % generate system matrix with different xy position,different energy
 % A = sparse(Nx*Ny*Nz,Ne*Nx*Ny);
-A = sparse(Nx*Ny,Nx*Ny*Nz);
+% A = sparse(Nx*Ny,Nx*Ny*Nz);
+gauss_para = zeros(8*Ne,Nz);
+Loss = zeros(Ne,1);
 tic;
-for e = 100%E
+for e = 180%E
     load([path,'/output/waterDose',num2str(e),'.mat'],'totalDose');
-    stencil = totalDose;
-    thres = 3e-4*max(totalDose,[],"all");
-    stencil(stencil<thres) = 0;
-    %idds(:,cnt) = squeeze(sum(totalDose,[1,2]));
-    row = [];
-    col = [];
-    val = [];
-    for ix = ((1:2:Nx)-(Nx+1)/2)
-        nx = ix + (Nx+1)/2;
-        temp = circshift(stencil,ix,2);
-        for iy = ((1:2:Ny)-(Ny+1)/2)
-            ny = iy + (Ny+1)/2;
-            idx = ny + (nx-1)*Ny;
-            temp = circshift(temp,iy,1);
-            %A(:,cnt) = sparse(temp(:));
-            [r,c,v] = find(temp(:));
-            row = [row;r];
-            col = [col;c*idx];
-            val = [val;v];
-            cnt = cnt + 1;
-        end
-    end
-    %
+    [gauss_para_o,Dose_o,loss] = fit3dDose_v3(x,totalDose);
+    gauss_para(((cnt-1)*8+1):cnt*8,:) = gauss_para_o;
+    Loss(cnt) = loss;
+    cnt = cnt + 1;
 end
 toc;
+% save('gauss_para.mat','gauss_para','Ne','Nz','Loss');
 % save('waterIDDs.mat','idds','E','dz');
 %% determine thres ratio by sparsity
 cnt = 1;
