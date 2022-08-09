@@ -26,7 +26,8 @@ head,dxyz = mc.read_3d_head_phantom(path2,name2,idx2)
 
 #transpose(2, 1, 0) is required for matlab
 image = np.array(head,dtype=np.short).transpose(2, 1, 0).flatten()
-mc.write_image(image,current_file_path + '\\Phantom\\')
+header_name = 'geo_phantom'
+mc.write_image(image,current_file_path + '\\Phantom\\',header_name+'.img')
 
 Nx = 51
 Ny = 51
@@ -41,7 +42,7 @@ num_particle = 1e6# integer, num of particles
 geo.set_header(Nx,Ny,Nz,dx,dy,dz)# see comments
 geo.set_cfg(energy,spot_size,num_particle)# see comments
 geo.create_cfg_file('pencilbeam.cfg')
-geo.create_header_file()
+geo.create_header_file(header_name + '.header')
 
 start = time.time()
 dose = pmc.run(geo.cfg_file,image)
@@ -51,4 +52,5 @@ totalDose = np.array(dose).reshape((geo.Nz,geo.Nx,geo.Ny)).transpose(2, 1, 0)
 viewer = napari.view_image(totalDose, rgb=False)
 napari.run()  # start the event loop and show viewer
 
-savemat(geo.outputdir+'waterDose'+str(E)+'.mat',{'totalDose':totalDose, 'dx':geo.dx, 'dy':geo.dy, 'dz':geo.dz})
+matData_filename = 'waterDose'+str(E)
+savemat(geo.outputdir+matData_filename+'.mat',{'totalDose':totalDose, 'dx':geo.dx, 'dy':geo.dy, 'dz':geo.dz})

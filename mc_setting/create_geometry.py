@@ -218,7 +218,7 @@ class geometry:
         self.outputdir = './output/'
         file.write('output.directory=%s\n' % self.outputdir)
         file.close()
-    def create_header_file(self):
+    def create_header_file(self,header_filename = 'geo_phantom.header'):
         """create geo_phantom.header file and save it in ./Phantom/
         """
         header_file = self.path+'/Phantom/'+'geo_phantom.header'

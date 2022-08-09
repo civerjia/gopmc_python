@@ -4,9 +4,9 @@ try:
     from create_sence import scene
 except:
     from .create_sence import scene
-def write_image(image,path):
+def write_image(image,path,filename = 'geo_phantom.img'):
     # write to file
-    image.flatten().astype(np.short).tofile(path+"geo_phantom.img")
+    image.flatten().astype(np.short).tofile(path+filename)
 if __name__ =='__main__':
     s = scene()
     # ROI: reduce useless computation
