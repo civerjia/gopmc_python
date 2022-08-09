@@ -135,26 +135,34 @@ void dose3d_2(std::vector<T> X, std::vector<T> Y, T* para, T* dose3d, int Nx, in
 template<class T>
 void dose3d_N_iso(std::vector<T> X, std::vector<T> Y, std::vector<T>  para, T* dose3d, int Nx, int Ny, int Nz, int N_gaussian)
 {
-#pragma omp parallel for firstprivate(X,Y,Nx,Ny,Nz,para)
+#pragma omp parallel for firstprivate(X,Y,Nx,Ny,Nz,para,N_gaussian)
     for (int nz = 0; nz < Nz; ++nz)
     {
-        for (int ny = 0; ny < Ny; ++ny)
+        T A{};
+        for(int ng = 0; ng < N_gaussian; ++ng)
         {
-            T y{ Y[ny] };
-            for (int nx = 0; nx < Nx; ++nx)
+            A += para[nz * N_gaussian * 4 + 4 * ng];
+        }
+        if(A > 1e-10)
+        {
+            for (int ny = 0; ny < Ny; ++ny)
             {
-                T x{ X[nx] };
-                int idx3d{ nx + ny * Nx + nz * (Nx * Ny) };
-                T temp {};
-                for(int ng = 0; ng < N_gaussian; ++ng)
+                T y{ Y[ny] };
+                for (int nx = 0; nx < Nx; ++nx)
                 {
-                    T A1     = para[nz * N_gaussian * 4 + 4 * ng];
-                    T mux1   = para[nz * N_gaussian * 4 + 4 * ng + 1];
-                    T muy1   = para[nz * N_gaussian * 4 + 4 * ng + 2];
-                    T sigma1 = para[nz * N_gaussian * 4 + 4 * ng + 3];
-                    temp += gauss2d(x, y, A1, mux1, muy1, sigma1);
+                    T x{ X[nx] };
+                    int idx3d{ nx + ny * Nx + nz * (Nx * Ny) };
+                    T temp {};
+                    for(int ng = 0; ng < N_gaussian; ++ng)
+                    {
+                        T A1     = para[nz * N_gaussian * 4 + 4 * ng];
+                        T mux1   = para[nz * N_gaussian * 4 + 4 * ng + 1];
+                        T muy1   = para[nz * N_gaussian * 4 + 4 * ng + 2];
+                        T sigma1 = para[nz * N_gaussian * 4 + 4 * ng + 3];
+                        temp += gauss2d(x, y, A1, mux1, muy1, sigma1);
+                    }
+                    dose3d[idx3d] = temp;
                 }
-                dose3d[idx3d] = temp;
             }
         }
     }
@@ -163,28 +171,36 @@ void dose3d_N_iso(std::vector<T> X, std::vector<T> Y, std::vector<T>  para, T* d
 template<class T>
 void dose3d_N(std::vector<T> X, std::vector<T> Y, std::vector<T>  para, T* dose3d, int Nx, int Ny, int Nz, int N_gaussian)
 {
-#pragma omp parallel for firstprivate(X,Y,Nx,Ny,Nz,para)
+#pragma omp parallel for firstprivate(X,Y,Nx,Ny,Nz,para,N_gaussian)
     for (int nz = 0; nz < Nz; ++nz)
     {
-        for (int ny = 0; ny < Ny; ++ny)
+        T A{};
+        for(int ng = 0; ng < N_gaussian; ++ng)
         {
-            T y{ Y[ny] };
-            for (int nx = 0; nx < Nx; ++nx)
+            A += para[nz * N_gaussian * 4 + 4 * ng];
+        }
+        if(A > 1e-10)
+        {
+            for (int ny = 0; ny < Ny; ++ny)
             {
-                T x{ X[nx] };
-                int idx3d{ nx + ny * Nx + nz * (Nx * Ny) };
-                T temp {};
-                for(int ng = 0; ng < N_gaussian; ++ng)
+                T y{ Y[ny] };
+                for (int nx = 0; nx < Nx; ++nx)
                 {
-                    T A     = para[nz * N_gaussian * 6 + 6 * ng];
-                    T mux   = para[nz * N_gaussian * 6 + 6 * ng + 1];
-                    T muy   = para[nz * N_gaussian * 6 + 6 * ng + 2];
-                    T sigma1= para[nz * N_gaussian * 6 + 6 * ng + 3];
-                    T sigma2= para[nz * N_gaussian * 6 + 6 * ng + 4];
-                    T beta  = para[nz * N_gaussian * 6 + 6 * ng + 5];
-                    temp += mvn2d(x, y, A, mux, muy, sigma1, sigma2, beta);
+                    T x{ X[nx] };
+                    int idx3d{ nx + ny * Nx + nz * (Nx * Ny) };
+                    T temp {};
+                    for(int ng = 0; ng < N_gaussian; ++ng)
+                    {
+                        T A     = para[nz * N_gaussian * 6 + 6 * ng];
+                        T mux   = para[nz * N_gaussian * 6 + 6 * ng + 1];
+                        T muy   = para[nz * N_gaussian * 6 + 6 * ng + 2];
+                        T sigma1= para[nz * N_gaussian * 6 + 6 * ng + 3];
+                        T sigma2= para[nz * N_gaussian * 6 + 6 * ng + 4];
+                        T beta  = para[nz * N_gaussian * 6 + 6 * ng + 5];
+                        temp += mvn2d(x, y, A, mux, muy, sigma1, sigma2, beta);
+                    }
+                    dose3d[idx3d] = temp;
                 }
-                dose3d[idx3d] = temp;
             }
         }
     }
