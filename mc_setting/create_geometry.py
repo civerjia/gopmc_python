@@ -14,7 +14,7 @@ class geometry:
         self.path = path.replace('\\','/')
 
         ## fixed values
-        self.data_type = 'short' # short or int
+        self.data_type = 'short' # short or int16
         self.byte_order = 0#fixed 0: least significant bit first(0001)  1:most significant bit first(1000)
         # not used
         self.translation = [0,0,0]
@@ -69,16 +69,16 @@ class geometry:
         self.x0 = (self.first_idx[0] - (self.Nx-1))*self.dx/2 + self.center[0]
         self.y0 = (self.first_idx[1] - (self.Ny-1))*self.dy/2 + self.center[1]
         self.z0 = (self.first_idx[2] - (self.Nz-1))*self.dz/2 + self.center[2]
-    def set_cfg(self,energy = 110.0,spot_size = [0,0],num_particle = 1e6,rx = 0,ry = 0,rz = 0,src_center = [0,0,-40]):
+    def set_cfg(self,energy = 110.0,spot_size = [0.0,0.0],num_particle = 1e6,rx = 0.0,ry = 0.0,rz = 0.0,src_center = [0.0,0.0,-40.0]):
         """ set pencilbeam.cfg parameters with user input
 
         Args:
             energy (float, optional): proton beam energy(MeV). Defaults to 110.0.
             spot_size (list, optional): [x size, y size] beam spot size (cm), sqare beam shape. Defaults to [0,0].
             num_particle (int, optional): number of proton particles. Defaults to 1e6.
-            rx (int, optional): rotation around x-axis: angle(degree). Defaults to 0.
-            ry (int, optional): rotation around y-axis: angle(degree). Defaults to 0.
-            rz (int, optional): rotation around z-axis: angle(degree). Defaults to 0.
+            rx (float, optional): rotation around x-axis: angle(degree). Defaults to 0.
+            ry (float, optional): rotation around y-axis: angle(degree). Defaults to 0.
+            rz (float, optional): rotation around z-axis: angle(degree). Defaults to 0.
             src_center (list, optional): beam source center position(cm) [x,y,z], beam direction is [0,0,1] by default
         """
         ## cfg arguments
@@ -220,6 +220,9 @@ class geometry:
         file.close()
     def create_header_file(self,header_filename = 'geo_phantom.header'):
         """create geo_phantom.header file and save it in ./Phantom/
+
+        Args:
+            header_filename (str, optional): filename. Defaults to 'geo_phantom.header'.
         """
         header_file = self.path+'/Phantom/'+'geo_phantom.header'
         file = open(header_file, "w+") 
