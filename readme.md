@@ -57,6 +57,7 @@ How to load CT images, modify `modify_this.py`:
     ```
 - read dicom files with read_dicom.py, costumize your own path, filename and index. Then convert dicom files to a single 3d numpy array
     ```python
+    # your dicom names may not formatted, try to rename them in 3rd party software like 3D slicer
     name2 = 'CT.1.3.12.2.1107.5.1.7.130094.30000022051213533424400000'# 214->348
     path2 = 'C:/Users/shuangzhou/Downloads/Head_Phantom/head2/'
     idx2 = np.arange(214,348)
@@ -94,9 +95,17 @@ How to load CT images, modify `modify_this.py`:
     ```
 - save results to matlab
     ```python
-    savemat(geo.outputdir+'waterDose'+str(E)+'.mat',{'totalDose':totalDose, 'dx':geo.dx, 'dy':geo.dy, 'dz':geo.dz})
+    matData_filename = 'waterDose'+str(E)
+    savemat(geo.outputdir+matData_filename+'.mat',{'totalDose':totalDose, 'dx':geo.dx, 'dy':geo.dy, 'dz':geo.dz})
     ```
-- read data in matlab (see minimum example)
+- load (*.mat)data in matlab
+    ```matlab
+    load([matData_filename,'.mat']);
+    % or load data in struct
+    dose = load([matData_filename,'.mat']);
+    % then dose.totalDose, dose.dx ...
+    ```
+- read (*.img)data in matlab (see minimum example)
 
 # Don't want to run with python
 - get geometry and img files ready
