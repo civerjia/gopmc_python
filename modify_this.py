@@ -53,4 +53,6 @@ viewer = napari.view_image(totalDose, rgb=False)
 napari.run()  # start the event loop and show viewer
 
 matData_filename = 'waterDose'+str(E)
-savemat(geo.outputdir+matData_filename+'.mat',{'totalDose':totalDose, 'dx':geo.dx, 'dy':geo.dy, 'dz':geo.dz})
+savemat(geo.outputdir+matData_filename+'.mat',\
+    {'totalDose':totalDose, 'head':head,\
+         'dx':geo.dx, 'dy':geo.dy, 'dz':geo.dz})
