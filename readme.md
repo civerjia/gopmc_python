@@ -129,6 +129,10 @@ How to load CT images, modify `modify_this.py`:
     fwrite(fileID,scene(:),'short');
     fclose(fileID);
     ```
+- show IDD
+    ```matlab
+    plot(squeeze(sum(totalDose,[1,2])))
+    ```
 # Important files 
 ``` python
 appgopmc_dose.cp39-win_amd64.pyd
