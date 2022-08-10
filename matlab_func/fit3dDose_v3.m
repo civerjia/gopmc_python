@@ -29,7 +29,7 @@ dS = (x(2)-x(1))*(y(2)-y(1));
 c = 1/(2*pi);
 % Dose_o = zeros(size(Dose3D));
 % [m,n,~] = size(Dose3D);
-valid = idd >= 4e-4*max(idd);
+valid = idd > 4e-4*max(idd);
 idx = 1:length(idd);
 valid_idx = idx(valid);
 loss = zeros(Nz,1);
