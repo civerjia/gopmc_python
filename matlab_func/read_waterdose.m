@@ -3,6 +3,7 @@ if contains(pwd,'matlab_func')
 else
     path = '.';
 end
+%% convert 3d water dose to layer by layer 2d gaussian model
 % read infinity small proton pencil beam, beam width = 0
 E = 25:180;
 Nx = 51;
@@ -21,7 +22,7 @@ Ne = length(E);
 gauss_para = zeros(8*Ne,Nz);
 Loss = zeros(Ne,1);
 tic;
-for e = 180%E
+for e = E
     load([path,'/output/waterDose',num2str(e),'.mat'],'totalDose');
     [gauss_para_o,Dose_o,loss] = fit3dDose_v3(x,totalDose);
     gauss_para(((cnt-1)*8+1):cnt*8,:) = gauss_para_o;
