@@ -11,7 +11,11 @@ function [Dose_o,gauss_para_o,loss] = gauss3d_dose(Dose3D,x,y,N_gaussian)
 xy = [x,y];
 idd = squeeze(sum(sum(Dose3D,1),2));
 Nz = size(Dose3D,3);
-gauss3d = @(para,xy) dose3d_mex(xy(:,1),xy(:,2),para,1,N_gaussian);
+if gpuDeviceCount > 0
+    gauss3d = @(para,xy) dose3d_gpu(xy(:,1),xy(:,2),para,1,N_gaussian);
+else
+    gauss3d = @(para,xy) dose3d_mex(xy(:,1),xy(:,2),para,1,N_gaussian);
+end
 if N_gaussian ==2
     %  sigma = 0 will return 0
     lb = [0,0,0,0, 0,0,0,0]';% A,mux,muy,sigma, A,mux,muy,sigma
