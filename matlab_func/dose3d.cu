@@ -15,7 +15,11 @@
 //#include <cmath>// cannot use in cu files
 #include <iostream>
 #include <stdio.h>
+#include "mex.h"
 // #include <omp.h>
+#include <string>
+#include <fstream>      // std::ofstream
+#include <filesystem>
 
 using T = float;
 using host_vec = thrust::host_vector<float>;
@@ -154,7 +158,7 @@ __global__ void dose3d_N(T* X, T* Y, T* para, T* dose3d)
 
 }
 
-void cpu_interface(host_vec X, host_vec Y, host_vec para, host_vec &dose3D, int Nx, int Ny, int Nz, int N_para, int N_gaussian)
+void cpu_interface(host_vec X, host_vec Y, host_vec para, host_vec& dose3D, int Nx, int Ny, int Nz, int N_para, int N_gaussian)
 {
     // copy data to device
     device_vec X_dev = X;
@@ -185,54 +189,53 @@ void cpu_interface(host_vec X, host_vec Y, host_vec para, host_vec &dose3D, int 
     // copy data back to host
     thrust::copy(dose3D_dev.begin(), dose3D_dev.end(), dose3D.begin());
 }
-
-
-template <class T>
-void linspace(T* L, T dmin, T dmax, int N)
+// save data to binary file
+void save_dat(std::string filename, host_vec vec)
 {
-    for (int i = 0; i < N; ++i)
-    {
-        L[i] = dmin + T(i) * (dmax - dmin) / T(N - 1);
-    }
+    std::ofstream outdata; // outdata is like cin
+    std::string fmt{ ".dat" };
+    outdata.open(filename + fmt, std::ofstream::binary | std::ofstream::out); // opens the file
+    outdata.write((char*)vec.data(), vec.size() * sizeof(T));
+    outdata.close();
 }
-int main()
-{
-    int Nx = 128;
-    int Ny = 128;
-    int Nz = 1;
-    int N_gaussian = 1;
-    int N_para = 6;
+void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]) {
+    T *X;
+    T *Y;
+    T *para;
+    X = (T*)mxGetPr(prhs[0]);
+    Y = (T*)mxGetPr(prhs[1]);
+    para = (T*)mxGetPr(prhs[2]);
+
+    const mwSize *dim_X = mxGetDimensions(prhs[0]);
+    const mwSize *dim_Y = mxGetDimensions(prhs[1]);
+    const mwSize *dim_para = mxGetDimensions(prhs[2]);
+    int Nx = static_cast<int>(dim_X[0]*dim_X[1]);
+    int Ny = static_cast<int>(dim_Y[0]*dim_Y[1]);
+    int N_para = static_cast<int>(dim_para[0]*dim_para[1]);
+
+    int Nz = static_cast<int>(*mxGetPr(prhs[3]));
+    int N_gaussian = static_cast<int>(*mxGetPr(prhs[4]));
+
     set_constant_mem(Nx, Ny, Nz, N_gaussian, N_para);
-    host_vec X(Nx);
-    host_vec Y(Ny);
-    host_vec dose3D(Nx * Ny);
-    host_vec para(6);// A, mux, muy, sigma1, simga2, beta(in rad)
-    para[0] = 1.0f;
-    para[1] = 0.0f;
-    para[2] = 0.0f;
-    para[3] = 1.0f;
-    para[4] = 2.0f;
-    para[5] = 0.0f;
 
-    linspace(X.data(), -1.0f, 1.0f, Nx);
-    linspace(Y.data(), -1.0f, 1.0f, Nx);
-    cpu_interface(X, Y, para, dose3D, Nx, Ny, Nz, N_para, N_gaussian);
-    for (int ix = 0; ix < Nx; ++ix)
-    {
-        for (int iy = 0; iy < Ny; ++iy)
-        {
-            std::cout << dose3D[iy + ix * Ny] << ' ';
-        }
-        std::cout << '\n';
-    }
+    host_vec X_vec(Nx), Y_vec(Ny);
+    thrust::copy(X, X + Nx, X_vec.begin());
+    thrust::copy(Y, Y + Ny, Y_vec.begin());
+
+    host_vec para_vec(N_para);
+    thrust::copy(para, para + N_para, para_vec.begin());
+
+    const mwSize size[3]{ mwSize(Nx), mwSize(Ny), mwSize(Nz) };
+    int64_t size3d = int64_t(Nx)* int64_t(Ny)* int64_t(Nz);
+    plhs[0] = mxCreateNumericArray(3, size, mxSINGLE_CLASS, mxREAL);
+    T* dose3d_ptr{};
+    dose3d_ptr = (T*)mxGetPr(plhs[0]);
+    host_vec dose3d(size3d);
+
     
-    // cudaDeviceReset must be called before exiting in order for profiling and
-    // tracing tools such as Nsight and Visual Profiler to show complete traces.
-    cudaError_t cudaStatus = cudaDeviceReset();
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaDeviceReset failed!");
-        return 1;
-    }
-    return 0;
-}
+    cpu_interface(X_vec, Y_vec, para_vec, dose3d, Nx, Ny, Nz, N_para, N_gaussian);
+    thrust::copy(dose3d.begin(), dose3d.end(), dose3d_ptr);
 
+//     std::string filename = "dose3D";
+//     save_dat(filename,dose3d);
+}
