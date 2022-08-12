@@ -12,6 +12,7 @@ elseif ispc && use_openmp
     avx_flag = 'CXXOPTIMFLAGS="\$CXXOPTIMFLAGS -mavx2"';
     src_path = './dose3d_mex.cpp';
     mex('-output','dose3d_mex',openmp_flag,avx_flag,src_path) 
+    mexcuda('-output', 'dose3d_gpu','-R2018a','dose3d.cu');
 else
     mex  dose3d_mex.cpp
 end
