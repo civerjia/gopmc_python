@@ -2,9 +2,11 @@ use_openmp = 1;
 if ismac && use_openmp
     % Code to run on Mac platform
     mex  CXXFLAGS='$CXXFLAGS -fopenmp' dose3d_mex.cpp
+    mexcuda('-output', 'dose3d_gpu','-R2018a','dose3d.cu');
 elseif isunix && use_openmp
     % Code to run on Linux platform
     mex  CXXFLAGS='$CXXFLAGS -fopenmp' dose3d_mex.cpp
+    mexcuda('-output', 'dose3d_gpu','-R2018a','dose3d.cu');
 elseif ispc && use_openmp
     % Code to run on Windows platform
     %mex  COMPFLAGS="$COMPFLAGS /openmp" *.cpp
@@ -15,6 +17,7 @@ elseif ispc && use_openmp
     mexcuda('-output', 'dose3d_gpu','-R2018a','dose3d.cu');
 else
     mex  dose3d_mex.cpp
+    mexcuda('-output', 'dose3d_gpu','-R2018a','dose3d.cu');
 end
 % avx2 or avx512 are not set,
 % if you compile with avx2, this function can even more faster
