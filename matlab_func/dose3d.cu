@@ -32,9 +32,9 @@ __constant__ int constmem_Nsize[5];
 void set_constant_mem(int Nx, int Ny, int Nz, int N_gaussian, int N_para)
 {
     int cNsize[5] = { Nx,Ny,Nz,N_gaussian,N_para }; // copy host data to constant memory
-    cudaError_t mem_err;
-    mem_err = cudaMemcpyToSymbol(constmem_Nsize, &cNsize, sizeof(int) * 5);
-    std::cout << "Error code = " << mem_err << '\n';
+    //cudaError_t mem_err;
+    //mem_err = cudaMemcpyToSymbol(constmem_Nsize, &cNsize, sizeof(int) * 5);
+    cudaMemcpyToSymbol(constmem_Nsize, &cNsize, sizeof(int) * 5);
 }
 
 __inline__ __device__ T gauss1d(T x, T A, T mu, T sigma)
@@ -52,51 +52,54 @@ __inline__ __device__ T gauss2d(T x, T y, T A, T mux, T muy, T sigma)
     }
     else
     {
-        T half_1_sigma2 = 1.0/(2.0*sigma*sigma);
+        T half_1_sigma2 = 1.0 / (2.0 * sigma * sigma);
         T c = const_1_PI * half_1_sigma2;
         T xnew = x - mux;
         T ynew = y - muy;
-        return A * c * expf(-half_1_sigma2 * (xnew* xnew + ynew* ynew));
+        return A * c * expf(-half_1_sigma2 * (xnew * xnew + ynew * ynew));
     }
 }
 __inline__ __device__ T mvn2d(T x, T y, T A, T mux, T muy, T sigma1, T sigma2, T beta)
 {
-    return 1.0f;
-    //if ((sigma1 < 1e-6) | (sigma2 < 1e-6))
-    //{
-    //    return 0.0f;
-    //}
-    //else
-    //{
-    //    T sigma11 = sigma1 * sigma1;
-    //    T sigma12 = 0.0f;
-    //    T sigma21 = 0.0f;
-    //    T sigma22 = sigma2 * sigma2;
-    //    T det = sigma11 * sigma22 - sigma12 * sigma21;
+    if ((sigma1 < 1e-6) | (sigma2 < 1e-6))
+    {
+        return 0.0f;
+    }
+    else
+    {
+        T sigma11 = sigma1 * sigma1;
+        T sigma12 = 0.0f;
+        T sigma21 = 0.0f;
+        T sigma22 = sigma2 * sigma2;
+        T det = sigma11 * sigma22 - sigma12 * sigma21;
 
-    //    // invsere of corvariance matrix 
-    //    T a = sigma22 / det;
-    //    T b = -sigma12 / det;
-    //    T c = -sigma21 / det;
-    //    T d = sigma11 / det;
+        // invsere of corvariance matrix 
+        T a = sigma22 / det;
+        T b = -sigma12 / det;
+        T c = -sigma21 / det;
+        T d = sigma11 / det;
 
-    //    // v = Rot([x - mux;y - muy])
-    //    T v1 = cosf(beta) * (x - mux) - sinf(beta) * (y - muy);
-    //    T v2 = sinf(beta) * (x - mux) + cosf(beta) * (y - muy);
-    //    // v' * M^-1 * v
-    //    T u1 = a * v1 + b * v2;
-    //    T u2 = c * v1 + d * v2;
-    //    T exponant = -0.5 * (v1 * u1 + v2 * u2);
-    //    T scale = (A * const_1_2PI) / sqrt(abs(det));
+        // v = Rot([x - mux;y - muy])
+        T v1 = cosf(beta) * (x - mux) - sinf(beta) * (y - muy);
+        T v2 = sinf(beta) * (x - mux) + cosf(beta) * (y - muy);
+        // v' * M^-1 * v
+        T u1 = a * v1 + b * v2;
+        T u2 = c * v1 + d * v2;
+        T exponant = -0.5 * (v1 * u1 + v2 * u2);
+        T scale = (A * const_1_2PI) / sqrt(abs(det));
 
-    //    return scale * expf(exponant);
-    //}
+        return scale * expf(exponant);
+    }
 }
-__global__ void dose3d_N_iso(T* X, T* Y, T* para, T* dose3d, int Nx, int Ny, int Nz, int N_gaussian)
+__global__ void dose3d_N_iso(T* X, T* Y, T* para, T* dose3d)
 {
     int nx = blockIdx.x * blockDim.x + threadIdx.x;
     int ny = blockIdx.y * blockDim.y + threadIdx.y;
     int nz = blockIdx.z * blockDim.z + threadIdx.z;
+    int Nx = constmem_Nsize[0];
+    int Ny = constmem_Nsize[1];
+    int Nz = constmem_Nsize[2];
+    int N_gaussian = constmem_Nsize[3];
     if (nz < Nz & ny < Ny & nx < Nx)
     {
         int idx3d{ nx + ny * Nx + nz * (Nx * Ny) };
@@ -116,59 +119,70 @@ __global__ void dose3d_N_iso(T* X, T* Y, T* para, T* dose3d, int Nx, int Ny, int
 }
 
 
-__global__ void dose3d_N(T* X, T* Y, T* para, T* dose3d, int Nx, int Ny, int Nz, int N_gaussian)
+__global__ void dose3d_N(T* X, T* Y, T* para, T* dose3d)
 {
     int nx = blockIdx.x * blockDim.x + threadIdx.x;
     int ny = blockIdx.y * blockDim.y + threadIdx.y;
     int nz = blockIdx.z * blockDim.z + threadIdx.z;
+    int Nx = constmem_Nsize[0];
+    int Ny = constmem_Nsize[1];
+    int Nz = constmem_Nsize[2];
+    int N_gaussian = constmem_Nsize[3];
     // __shared__ X_shared[512];
     // __shared__ Y_shared[512];
-    if (nz < Nz & ny < Ny & nx < Nx)
+    if (nx >= Nx || ny >= Ny || nz >= Nz) return;
+
+    // X_shared[nx] = X[nx];
+    // Y_shared[ny] = Y[ny];
+    // __syncthreads();
+    // 
+    int idx3d{ nx + ny * Nx + nz * (Nx * Ny) };
+    T x{ X[nx] };
+    T y{ Y[ny] };
+    T temp{};
+    for (int ng = 0; ng < N_gaussian; ++ng)
     {
-        // X_shared[nx] = X[nx];
-        // Y_shared[ny] = Y[ny];
-        // __syncthreads();
-        int idx3d{ nx + ny * Nx + nz * (Nx * Ny) };
-        T x{ X[nx] };
-        T y{ Y[ny] };
-        T temp{};
-        for (int ng = 0; ng < N_gaussian; ++ng)
-        {
-            T A = para[nz * N_gaussian * 6 + 6 * ng];
-            T mux = para[nz * N_gaussian * 6 + 6 * ng + 1];
-            T muy = para[nz * N_gaussian * 6 + 6 * ng + 2];
-            T sigma1 = para[nz * N_gaussian * 6 + 6 * ng + 3];
-            T sigma2 = para[nz * N_gaussian * 6 + 6 * ng + 4];
-            T beta = para[nz * N_gaussian * 6 + 6 * ng + 5];
-            temp += mvn2d(x, y, A, mux, muy, sigma1, sigma2, beta);
-        }
-        dose3d[idx3d] = 1.0;
+        T A = para[nz * N_gaussian * 6 + 6 * ng];
+        T mux = para[nz * N_gaussian * 6 + 6 * ng + 1];
+        T muy = para[nz * N_gaussian * 6 + 6 * ng + 2];
+        T sigma1 = para[nz * N_gaussian * 6 + 6 * ng + 3];
+        T sigma2 = para[nz * N_gaussian * 6 + 6 * ng + 4];
+        T beta = para[nz * N_gaussian * 6 + 6 * ng + 5];
+        temp += mvn2d(x, y, A, mux, muy, sigma1, sigma2, beta);
     }
+    dose3d[idx3d] = temp;
 
 }
 
-void cpu_interface(host_vec X, host_vec Y, host_vec para, host_vec dose3D)
+void cpu_interface(host_vec X, host_vec Y, host_vec para, host_vec &dose3D, int Nx, int Ny, int Nz, int N_para, int N_gaussian)
 {
+    // copy data to device
     device_vec X_dev = X;
     device_vec Y_dev = Y;
     device_vec para_dev = para;
     device_vec dose3D_dev = dose3D;
-
+    // cast to raw pointer
     T* X_dev_ptr = thrust::raw_pointer_cast(X_dev.data());
     T* Y_dev_ptr = thrust::raw_pointer_cast(Y_dev.data());
     T* para_dev_ptr = thrust::raw_pointer_cast(para_dev.data());
     T* dose3D_dev_ptr = thrust::raw_pointer_cast(dose3D_dev.data());
 
-    int Nx = constmem_Nsize[0];
-    int Ny = constmem_Nsize[1];
-    int Nz = constmem_Nsize[2];
-
-    dim3 threadsPerBlock(16, 16, 16);
-    dim3 numBlocks(Nx / threadsPerBlock.x, Ny / threadsPerBlock.y, Nz / threadsPerBlock.z);
-    dose3d_N << <numBlocks, threadsPerBlock >> > (X_dev_ptr, Y_dev_ptr, para_dev_ptr, dose3D_dev_ptr,
-        constmem_Nsize[0], constmem_Nsize[1], constmem_Nsize[2], constmem_Nsize[3]);
+    dim3 threadsPerBlock(8, 8, 8);
+    dim3 numBlocks((Nx - 1 + threadsPerBlock.x) / threadsPerBlock.x, (Ny - 1 + threadsPerBlock.y) / threadsPerBlock.y,
+        (Nz - 1 + threadsPerBlock.z) / threadsPerBlock.z);
+    if (N_gaussian * 6 == N_para)
+    {
+        dose3d_N << <numBlocks, threadsPerBlock >> > (X_dev_ptr, Y_dev_ptr, para_dev_ptr, dose3D_dev_ptr);
+    }
+    else if (N_gaussian * 4 == N_para)
+    {
+        dose3d_N_iso << <numBlocks, threadsPerBlock >> > (X_dev_ptr, Y_dev_ptr, para_dev_ptr, dose3D_dev_ptr);
+    }
+    else
+    {
+        std::cout << "wrong N_para not equal 6 * N_gaussian or 4 * N_gaussian \n";
+    }
     // copy data back to host
-    std::cout << "hello = " << dose3D_dev[12] << '\n';
     thrust::copy(dose3D_dev.begin(), dose3D_dev.end(), dose3D.begin());
 }
 
@@ -183,8 +197,8 @@ void linspace(T* L, T dmin, T dmax, int N)
 }
 int main()
 {
-    int Nx = 5;
-    int Ny = 5;
+    int Nx = 128;
+    int Ny = 128;
     int Nz = 1;
     int N_gaussian = 1;
     int N_para = 6;
@@ -199,17 +213,26 @@ int main()
     para[3] = 1.0f;
     para[4] = 2.0f;
     para[5] = 0.0f;
-    
+
     linspace(X.data(), -1.0f, 1.0f, Nx);
     linspace(Y.data(), -1.0f, 1.0f, Nx);
-    cpu_interface(X, Y, para, dose3D);
+    cpu_interface(X, Y, para, dose3D, Nx, Ny, Nz, N_para, N_gaussian);
     for (int ix = 0; ix < Nx; ++ix)
     {
         for (int iy = 0; iy < Ny; ++iy)
         {
             std::cout << dose3D[iy + ix * Ny] << ' ';
         }
-        std::cout<< '\n';
+        std::cout << '\n';
+    }
+    
+    // cudaDeviceReset must be called before exiting in order for profiling and
+    // tracing tools such as Nsight and Visual Profiler to show complete traces.
+    cudaError_t cudaStatus = cudaDeviceReset();
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "cudaDeviceReset failed!");
+        return 1;
     }
     return 0;
 }
+
