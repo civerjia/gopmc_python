@@ -12,7 +12,7 @@ xy = [x,y];
 idd = squeeze(sum(sum(Dose3D,1),2));
 Nz = size(Dose3D,3);
 if gpuDeviceCount > 0
-    gauss3d = @(para,xy) dose3d_gpu(xy(:,1),xy(:,2),para,1,N_gaussian);
+    gauss3d = @(para,xy) double(dose3d_gpu(single(xy(:,1)),single(xy(:,2)),single(para),1,N_gaussian));
 else
     gauss3d = @(para,xy) dose3d_mex(xy(:,1),xy(:,2),para,1,N_gaussian);
 end
