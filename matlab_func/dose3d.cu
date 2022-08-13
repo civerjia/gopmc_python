@@ -10,7 +10,7 @@
 #include <algorithm>
 
 #include <cmath>
-#include <array>
+// #include <array>
 #include <vector>
 //#include <cmath>// cannot use in cu files
 #include <iostream>
